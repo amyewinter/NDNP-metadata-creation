@@ -1,4 +1,4 @@
-#last changed 8/3/2018 
+#last changed 9/10/2018 
 
 #pdf merger will use list of pdfs to create merged file; filename for merged pdf is concatenated newsname (name of newspaper pulled from dictionary) and fn_1 (date) so can create this and add to line of metadata; 
 #pdf merger file identification can be separate loop to avoid looping problem?
@@ -74,7 +74,9 @@ news_lang = "English" #change to Spanish manually in Excel for Spanish papers
 pdfs = list()
 dc_list = list()
 
+#unformatted titles dictionary for file naming
 titlesu = {"sn001" : "daily-planet", "sn002" : "daily-prophet", "sn565" : "amity-gazette", "sn5683a" : "antarctica-daily"}
+#formatted titles dictionary for metadata entry
 titlesf = {"sn001" : "The Daily Planet", "sn002" : "The Daily Prophet", "sn565" : "The Amity Gazette", "sn5683a" : "Antarctica Daily"}
 coverage = {"sn001" : "Metropolis", "sn002" : "Diagon Alley", "sn565" : "Martha's Vineyard", "sn5683a" : "Antarctica"}
 
@@ -87,25 +89,25 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	
 	dirname, fname = os.path.split(root)
 	
-	#print "dirname is ", dirname
-	#print "fname is ", fname
+	print "dirname is ", dirname
+	print "fname is ", fname
 	
 	#getting LCCN
 	if "sn" not in fname:
 		pass
 	else:
 		lccn_1 = fname
-		#print lccn_1
+		print "serial # is ", lccn_1
 	
 	#getting folder names and parsing into date formats
 	if not fname.startswith("1"):	
 		pass
 	else:
 		fn_1 = fname[0:4] + "-" + fname[4:6] +  "-" + fname [6:8] #this is YYYY-MM-DD format for DC batch upload
-		#print "fn_1 is " + fn_1
+		print "fn_1 is ", fn_1
 		
 		fn_2 = fname[4:6] +  "-" + fname [6:8] + "-" + fname[0:4] #this is MM-DD-YYYY format for the item title in DC
-		#print "fn_2 is " + fn_2
+		print "fn_2 is ", fn_2
 		
 		#store fname as name of subdirectory to run pdf merger on files within it?
 		#pdf merge loop here?
@@ -113,9 +115,9 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 		
 	#filling variables for metadata fields 
 	if lccn_1 in titlesu:
-		newsname = titlesu.get(lccn_1)
+		newsname = titlesu.get(lccn_1) + str(fn_1)
 	else:
-		newsname = "Unknown"
+		newsname = "Unknown" + "-" + str(fn_1)
 	
 	#getting DC formatted item title
 	if lccn_1 in titlesf:
@@ -130,15 +132,17 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 		city_name = "New Mexico"	
 	
 	#creating pathname for folder and file output
+	#I don't think we need individual folders on desktop; might simplify script as long as output pdfs are named correctly?
 	#same newspaper might be on multiple hard drives and output should go into one folder per newspaper
 	out_path = "C:/Users/amywinter/Desktop/" + str(newsname)
-	#print "output path is " + out_path
+	print "output path is ", out_path
 	
+	#not doing this for now, to help simplify script
 	#creating directory named for newspaper, to hold combined pdfs
-	if os.path.isdir(out_path): 
-		pass #skipping if desktop folder already exists for this newspaper
-	else:
-		os.mkdir(out_path)
+	#if os.path.isdir(out_path): 
+		#pass #skipping if desktop folder already exists for this newspaper
+	#else:
+		#os.mkdir(out_path)
 			
 	#adding values to lists
 	#dc list:  title, lccn, "Newspaper", publication date, language, city_name, pdfname
@@ -151,7 +155,7 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	dc_list.append(city_name)
 	dc_list.append(pdfname)
 			
-	#print dc_list
+	print dc_list
 	
 	# files are being opened in append mode so check output for duplicates
 	#f = open("dc-metadata.csv", "ab")
@@ -160,34 +164,29 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	#wr.writerow(dc_list)
 	
 	#f.close()
-	
-	
-
-#new loop for getting pdf input file names, adding them to list, and writing them to combined pdf in folder on desktop
-for folder, subs, files in os.walk('.'):
 
 	#concatenating the name of the newspaper plus the issue date for the name of the combined pdf file
-	pdfname = "C:/Users/amywinter/Desktop/" +  newsname + "-" + str(fn_1) + ".pdf"
+	pdfname = "C:/Users/amywinter/Desktop/" +  newsname + ".pdf"
 	print "pdfname is ", pdfname
 
 	for filename in files:
 	#if filename ends with .pdf, add to list; this will be the list of pdfs to merge with pdf merger
 		if filename.endswith(".pdf"):
-			pdfs.append(os.path.abspath(os.path.join(folder, filename)))
-			#print "pdf list is ", pdfs
-			#print "pdf list length is ", len(pdfs)
+			pdfs.append(os.path.abspath(os.path.join(dirname, fname, filename)))
+			print "pdf list is ", pdfs
+			print "pdf list length is ", len(pdfs)
 	
-			if len(pdfs) > 1:		
+			#if len(pdfs) > 1:		
 			#use the pdf combine script to combine the pdfs for that date, and name with date and newsname
-				merger = PdfFileMerger()
+				#merger = PdfFileMerger()
 
-				for pdf in pdfs:
-					merger.append(open(pdf, 'rb'))
+				#for pdf in pdfs:
+					#merger.append(open(pdf, 'rb'))
 	
-				with open(pdfname, 'wb') as fout:
-					merger.write(fout)
+				#with open(pdf, 'wb') as fout:
+					#merger.write(fout)
 				
-				print "PDF PRINTED"
+				#print "PDF PRINTED"
 				
 	#emptying out containers
 	del pdfs[:]
