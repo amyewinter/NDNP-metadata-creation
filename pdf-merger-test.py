@@ -1,4 +1,4 @@
-#last changed 9/10/2018 
+#last changed 9/11/2018 
 
 #pdf merger will use list of pdfs to create merged file; filename for merged pdf is concatenated newsname (name of newspaper pulled from dictionary) and fn_1 (date) so can create this and add to line of metadata; 
 #pdf merger file identification can be separate loop to avoid looping problem?
@@ -97,17 +97,17 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 		pass
 	else:
 		lccn_1 = fname
-		print "serial # is ", lccn_1
+		#print "serial # is ", lccn_1
 	
 	#getting folder names and parsing into date formats
 	if not fname.startswith("1"):	
 		pass
 	else:
 		fn_1 = fname[0:4] + "-" + fname[4:6] +  "-" + fname [6:8] #this is YYYY-MM-DD format for DC batch upload
-		print "fn_1 is ", fn_1
+		#print "fn_1 is ", fn_1
 		
 		fn_2 = fname[4:6] +  "-" + fname [6:8] + "-" + fname[0:4] #this is MM-DD-YYYY format for the item title in DC
-		print "fn_2 is ", fn_2
+		#print "fn_2 is ", fn_2
 		
 		#store fname as name of subdirectory to run pdf merger on files within it?
 		#pdf merge loop here?
@@ -115,27 +115,27 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 		
 	#filling variables for metadata fields 
 	if lccn_1 in titlesu:
-		newsname = titlesu.get(lccn_1) + str(fn_1)
-	else:
-		newsname = "Unknown" + "-" + str(fn_1)
+		newsname = titlesu.get(lccn_1) + "-" + str(fn_1)
+	#else:
+		#newsname = "Unknown" + "-" + str(fn_1)
 	
 	#getting DC formatted item title
 	if lccn_1 in titlesf:
 		titlef = str(titlesf.get(lccn_1)) + ", " + str(fn_2)
-	else:
-		titlef = "Unknown" + "," + str(fn_2)
+	#else:
+		#titlef = "Unknown" + "," + str(fn_2)
 		
 	#getting city_name
 	if lccn_1 in coverage:
 		city_name = coverage.get(lccn_1)
-	else:
-		city_name = "New Mexico"	
+	#else:
+		#city_name = "New Mexico"	
 	
 	#creating pathname for folder and file output
 	#I don't think we need individual folders on desktop; might simplify script as long as output pdfs are named correctly?
 	#same newspaper might be on multiple hard drives and output should go into one folder per newspaper
 	out_path = "C:/Users/amywinter/Desktop/" + str(newsname)
-	print "output path is ", out_path
+	#print "output path is ", out_path
 	
 	#not doing this for now, to help simplify script
 	#creating directory named for newspaper, to hold combined pdfs
@@ -146,16 +146,17 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 			
 	#adding values to lists
 	#dc list:  title, lccn, "Newspaper", publication date, language, city_name, pdfname
-
-	dc_list.append(titlef)
-	dc_list.append(lccn_1)
-	dc_list.append(doctype)
-	dc_list.append(str(fn_1))
-	dc_list.append(news_lang)
-	dc_list.append(city_name)
-	dc_list.append(pdfname)
-			
-	print dc_list
+	
+	#if 'Unknown' not in titlef and fn_1 is not None:
+	#dc_list.append(titlef)
+	#dc_list.append(lccn_1)
+	#dc_list.append(doctype)
+	#dc_list.append(str(fn_1))
+	#dc_list.append(news_lang)
+	#dc_list.append(city_name)
+	#dc_list.append(pdfname)
+	
+	#print dc_list
 	
 	# files are being opened in append mode so check output for duplicates
 	#f = open("dc-metadata.csv", "ab")
@@ -165,33 +166,42 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	
 	#f.close()
 
+	#instructions for processing the metadata output in Excel, draft #1:  Highlight column D (publication date), press F5, #click "Special", click "Blanks", then on Home tab choose "delete sheet rows" - this gets rid of all repeats with #missing fields
+	
 	#concatenating the name of the newspaper plus the issue date for the name of the combined pdf file
 	pdfname = "C:/Users/amywinter/Desktop/" +  newsname + ".pdf"
 	print "pdfname is ", pdfname
 
 	for filename in files:
+		#print filename
 	#if filename ends with .pdf, add to list; this will be the list of pdfs to merge with pdf merger
 		if filename.endswith(".pdf"):
-			pdfs.append(os.path.abspath(os.path.join(dirname, fname, filename)))
+			#print filename
+			pdfs.append(filename)
 			print "pdf list is ", pdfs
 			print "pdf list length is ", len(pdfs)
 	
-			#if len(pdfs) > 1:		
-			#use the pdf combine script to combine the pdfs for that date, and name with date and newsname
-				#merger = PdfFileMerger()
+	if len(pdfs) > 0:
+		print "Done adding PDFs for this folder!"
+		
+	#use the pdf combine script to combine the pdfs for that date, and name with date and newsname
+	#PROBLEM:  This is printing PDF files that have 2 copies of the last file in the folder; first file is skipped #somehow
+	merger = PdfFileMerger()
 
-				#for pdf in pdfs:
-					#merger.append(open(pdf, 'rb'))
+	for item in pdfs:
+		input_path = os.path.join(dirname, fname, filename)
+		input_path = os.path.normpath(input_path)
+		merger.append(input_path, 'rb')
 	
-				#with open(pdf, 'wb') as fout:
-					#merger.write(fout)
+	with open(pdfname, 'wb') as fout:
+		merger.write(fout)
 				
-				#print "PDF PRINTED"
+	print "PDF PRINTED!!"
 				
 	#emptying out containers
 	del pdfs[:]
 	pdfname = ""
-	lccn_1 = ""
+	#lccn_1 = ""
 	newsname = ""
 	fn_1 = ""
 	fn_2 = ""
