@@ -74,16 +74,32 @@ news_lang = "English" #change to Spanish manually in Excel for Spanish papers
 pdfs = list()
 dc_list = list()
 
-#unformatted titles dictionary for file naming
-titlesu = {"sn001" : "daily-planet", "sn002" : "daily-prophet", "sn565" : "amity-gazette", "sn5683a" : "antarctica-daily"}
-#formatted titles dictionary for metadata entry
-titlesf = {"sn001" : "The Daily Planet", "sn002" : "The Daily Prophet", "sn565" : "The Amity Gazette", "sn5683a" : "Antarctica Daily"}
-coverage = {"sn001" : "Metropolis", "sn002" : "Diagon Alley", "sn565" : "Martha's Vineyard", "sn5683a" : "Antarctica"}
+#dictionaries
+titlesu = {}
+titlesf = {}
+coverage = {}
+
+tfile_h  = open("meta.csv", "r")
+for line in tfile_h:
+	meta = line.split(",")
+	#strip whitespace just in Case
+	meta = [x.strip(' "\t\r\n') for x in meta]
+	#unformatted titles dictionary for file naming
+	titlesu[meta[0]] = meta[1]
+	#formatted titles dictionary for metadata entry
+	titlesf[meta[0]] = meta[2]
+	coverage[meta[0]] = meta[3]
+tfile_h.close()
+#print titlesu
+#print titlesf
+#print coverage
+
+
 
 # this is going to be a loop problem -- need to loop through one date-named folder at a time and create that combined PDF, then go to the next date-named folder within the #lccn-named outer folder.
 
 #walking through collection, filling variables and combining pdf files
-for root, dirs, files in os.walk('.'): #starts in current directory
+for root, dirs, files in os.walk('./batch_nmu_irving'): #starts in current directory
 	
 	#get folder name; put in variable - this is the lc serial number (lccn) for the newspaper
 	
@@ -169,7 +185,7 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	#instructions for processing the metadata output in Excel, draft #1:  Highlight column D (publication date), press F5, #click "Special", click "Blanks", then on Home tab choose "delete sheet rows" - this gets rid of all repeats with #missing fields
 	
 	#concatenating the name of the newspaper plus the issue date for the name of the combined pdf file
-	pdfname = "C:/Users/amywinter/Desktop/" +  newsname + ".pdf"
+	pdfname = "output/" +  newsname + ".pdf"
 	print "pdfname is ", pdfname
 
 	for filename in files:
@@ -184,19 +200,19 @@ for root, dirs, files in os.walk('.'): #starts in current directory
 	if len(pdfs) > 0:
 		print "Done adding PDFs for this folder!"
 		
-	#use the pdf combine script to combine the pdfs for that date, and name with date and newsname
-	#PROBLEM:  This is printing PDF files that have 2 copies of the last file in the folder; first file is skipped #somehow
-	merger = PdfFileMerger()
+		#use the pdf combine script to combine the pdfs for that date, and name with date and newsname
+		#PROBLEM:  This is printing PDF files that have 2 copies of the last file in the folder; first file is skipped #somehow
+		merger = PdfFileMerger()
 
-	for item in pdfs:
-		input_path = os.path.join(dirname, fname, filename)
-		input_path = os.path.normpath(input_path)
-		merger.append(input_path, 'rb')
+		for item in pdfs:
+			input_path = os.path.join(dirname, fname, item)
+			input_path = os.path.normpath(input_path)
+			merger.append(input_path, 'rb')
 	
-	with open(pdfname, 'wb') as fout:
-		merger.write(fout)
+		with open(pdfname, 'wb') as fout:
+			merger.write(fout)
 				
-	print "PDF PRINTED!!"
+		print "PDF PRINTED!!"
 				
 	#emptying out containers
 	del pdfs[:]
